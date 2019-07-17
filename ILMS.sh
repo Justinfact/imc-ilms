@@ -286,7 +286,7 @@ function my_config() {
     echo "*** Creating backup of /etc/my.cnf as /etc/my.cnf.bak"
     cp /etc/my.cnf /etc/my.cnf.bak
     echo "*** Replacing /etc/my.cnf with the custom my.cnf file"
-    mv -f my-lmst-$1.txt /etc/my.cnf
+    mv -f my-ilms-$1.txt /etc/my.cnf
     echo "*** Downloaded and installed custom /etc/my.cnf file for IMC:"
     cat /etc/my.cnf
 
@@ -363,9 +363,7 @@ function my_secure_install() {
         echo -e "[client]\nuser = root\npassword = ${temppw}" >> ~/.my.cnf
         echo "*** Added user root with temporary password $temppw to ~/.my.cnf for simple MySQL client login."
 
-        mysql -u root --connect-expired-password -Be "ALTER USER 'root'@'localhost' IDENTIFIED BY '${rootpw}';FLUSH PRIVILEGES;"
-        mysql -u root -Be "SET PASSWORD = PASSWORD('${rootpw}');FLUSH PRIVILEGES;"
-        # Alternate method: mysql -u root -Bse "update user set authentication_string=PASSWORD('$rootpw') where User='root';flush privileges;"
+        mysql -u root --connect-expired-password -Be "SET old_passwords = 0;SET PASSWORD = PASSWORD('${rootpw}');FLUSH PRIVILEGES;"
         echo "*** Changed temporary root password to your password of choice."
 
         rm -f ~/.my.cnf
@@ -375,7 +373,7 @@ function my_secure_install() {
         echo "*** Added user root with password $rootpw to ~/.my.cnf for simple MySQL client login."
     fi
 
-    mysql -u root --database=mysql -Be "UPDATE USER set host='%' where user='root';grant all privileges on *.* to root@'%' identified by '${rootpw}' with grant option;FLUSH PRIVILEGES;"
+    mysql -u root --database=mysql -Be "UPDATE user set host='%' where user='root';grant all privileges on *.* to root@'%' identified by '${rootpw}' with grant option;FLUSH PRIVILEGES;"
     echo "*** Granted all privileges to root."
 
     # MySQL 5.7 does not need to run mysql_secure_install
