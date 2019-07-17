@@ -1,0 +1,45 @@
+# IMC ILMS Custom MySQL 5.6 configuration file based on my-huge.cnf.
+# This file has all unnecessary comments and options removed.
+# For all options, please look at the original my-huge.cnf file.
+
+[client]
+port		= 3306
+socket		= /var/lib/mysql/mysql.sock
+
+[mysqld]
+port		= 3306
+socket		= /var/lib/mysql/mysql.sock
+skip-external-locking
+key_buffer_size = 384M
+max_allowed_packet = 200M
+table_open_cache = 512
+sort_buffer_size = 2M
+read_buffer_size = 2M
+read_rnd_buffer_size = 8M
+myisam_sort_buffer_size = 64M
+thread_cache_size = 8
+query_cache_size = 32M
+max_connections = 1000
+character-set-server = latin1
+default-storage-engine = INNODB
+lower_case_table_names = 1
+innodb_buffer_pool_size = 512M
+innodb_additional_mem_pool_size = 16M
+thread_concurrency = 8
+server-id	= 1
+
+[mysqldump]
+quick
+max_allowed_packet = 16M
+
+[mysql]
+no-auto-rehash
+
+[myisamchk]
+key_buffer_size = 256M
+sort_buffer_size = 256M
+read_buffer = 2M
+write_buffer = 2M
+
+[mysqlhotcopy]
+interactive-timeout
