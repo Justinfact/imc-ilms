@@ -24,12 +24,28 @@ It is free, open source, and comes with absolutely NO warranty.
   4) Answer all prompts as requested and wait for the script to complete
   5) Reboot as prompted, and then download & install IMC
 
-NOTE: If you edited the script on Windows, you may need to change the End of Line character from Windows CR LF to Linux LF. On Linux you can run this to fix it: sed -i -e 's/\r$//' ./ILMS.sh
+## Known Issues
+
+1) If you edited the script on Windows, you may need to change the End of Line character from Windows CR LF to Linux LF. On Linux you can run this to fix it: sed -i -e 's/\r$//' ./ILMS.sh
+2) The script does not validate command output. If a command fails to execute on your system, it will print a message about success anyways. Currently no plans to change this, as adding output validation would significantly increase the amount of code required.
+3) The script validates the IP address entered, but does not verify if it is configured. This may result in an incorrect IP address to Hostname entry in /etc/hosts if you make a typo or otherwise enter the wrong IP. This will be fixed in a future release.
+4) The script checks if the MySQL root password you enter meets the MySQL default password policy requirements, but does not check for the special characters which are not supported by IMC. Please check the IMC MySQL Installation Guide for details. I would recommend using underscore _ or plus + sign in the password, which definitely work. This will be fixed in a future release.
+
+## Upcoming Features (future version)
+
+1) MySQL Commercial (Enterprise) setup automation
+2) MySQL 8.0 installation and setup automation
+3) Prompt to input UTC offset to automatically resolve the 'timezone issue' (manual fix in FAQ below)
+4) Improved input validation for IP address and MySQL root password
 
 ## FAQ
   **Q: What do I need to do after the script finishes successfully?**
   
   A: Download and extract IMC for Linux, then navigate to the extracted folder and under /linux/install, run "chmod -x install.sh" and then "./install.sh" to start the installater. Make sure you are running a graphical environment.
+  
+  **Q: What if I plan to use a different version/edition of MySQL?**
+  
+  A: If you select "no" when asked whether to setup MySQL, no MySQL-related packages will be installed. Make sure you follow the respective official HPE MySQL 5.x Installation Guide for IMC.
   
   **Q: IMC Installer shows an error related to Timezone. What should I do?**
   
@@ -93,8 +109,4 @@ validate_password_number_count=0
   
   **Q: What if something goes wrong, and I have to run the script again? Will it break anything?**
   
-  A: It was designed to support reruns, so you should not have any issues doing so.
-  
-  **Q: What if I plan to use a different version/edition of MySQL?**
-  
-  A: If you select "no" when asked whether to setup MySQL, no MySQL-related packages will be installed. Make sure you follow the respective official HPE MySQL 5.x Installation Guide for IMC.
+  A: It was designed to support reruns, so you should not have any issues doing so. If you find any issues, please report them to me.
