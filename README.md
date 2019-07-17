@@ -29,8 +29,8 @@ NOTE: If you edited the script on Windows, you may need to change the End of Lin
 ## FAQ
   **Q: What do I need to do after the script finishes successfully?**
   
-  A: Download and extract IMC for Linux, then "chmod -R 777 /path/to/extracted/linux/folder" and run "./linux/install/install.sh" to start the installation. Make sure you are running the desktop environment.
-  
+  A: Download and extract IMC for Linux, then navigate to the extracted folder and under /linux/install, run "chmod -x install.sh" and then "./install.sh" to start the installater. Make sure you are running a graphical environment.
+
   **Q: Why no script for Oracle DB?**
   
   A: Oracle DB installation for IMC is relatively complex, and do you really need Oracle DB when you've got MySQL?
