@@ -30,6 +30,37 @@ NOTE: If you edited the script on Windows, you may need to change the End of Lin
   **Q: What do I need to do after the script finishes successfully?**
   
   A: Download and extract IMC for Linux, then navigate to the extracted folder and under /linux/install, run "chmod -x install.sh" and then "./install.sh" to start the installater. Make sure you are running a graphical environment.
+  
+  **Q: IMC Installer shows an error related to Timezone. What should I do?**
+  
+  A: This is due to a known issue with MySQL JDBC Driver for IMC. Please set the default timezone in the /etc/my.cnf by setting your server's time offset from UTC, following are some examples:
+default-time-zone = ‘-06:00’
+OR
+default-time-zone = ‘+02:00’
+See also:
+https://stackoverflow.com/questions/930900/how-do-i-set-the-time-zone-of-mysql
+https://www.interserver.net/tips/kb/change-mysql-server-time-zone/
+
+  **Q: IMC Installation is interrupted with error in dbresult: **
+
+Begin to install imcnetresdm database and data...
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+Begin to create config_db database...
+mysql: [Warning] Using a password on the command line interface can be insecure.
+mysql: [Warning] Using a password on the command line interface can be insecure.
+ERROR 1396 (HY000) at line 5: Operation DROP USER failed for 'imc_config'@'%'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+ERROR 1819 (HY000) at line 1: Your password does not satisfy the current policy requirements
+The install of imcnetresdm finished unsuccessfully, please contact your local IMC support centre.
+
+  A: This is due to IMC 7.3 E0703 creating its DB users with: CREATE USER 'imc_config'@'%' IDENTIFIED WITH 'mysql_native_password'
+  
+  It can be worked around by adding the following to /etc/my.cnf under [mysqld]:
+validate_password_policy=LOW
+validate_password_special_char_count=0
+validate_password_length=0
+validate_password_mixed_case_count=0
+validate_password_number_count=0
 
   **Q: Why no script for Oracle DB?**
   
