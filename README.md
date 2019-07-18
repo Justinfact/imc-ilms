@@ -11,6 +11,7 @@ It is free, open source, and comes with absolutely NO warranty.
 ## Server Prerequisites
   * Supported RHEL or CentOS (unsupported but works) installed on your server.
   * Hardware properly adjusted for the size of the IMC installation.
+  * For hardware scaling and recommendation see [Deployment & Hardware Configuration Schemes](https://support.hpe.com/hpsc/doc/public/display?docLocale=en_US&docId=emr_na-a00075913en_us&withFrame).
   * Static IP address must already be configured.
   * Run the script as root (commands are not run with sudo)
   * The server must have internet access.
@@ -24,12 +25,21 @@ It is free, open source, and comes with absolutely NO warranty.
   4) Answer all prompts as requested and wait for the script to complete
   5) Reboot as prompted, and then download & install IMC
 
+## Deployment Schemes
+IMC provides numerous deployment models that can be used depending on the size and scale of your installation. Which model you use determines how you should answer the prompts in the script on the server(s) to prepare them for IMC.
+
+**If you are deploying IMC in...**
+  * **Centralized with Local DB**, choose to install "both" (MySQL Client & Server) on the IMC Servr
+  * **Centralized with Remote DB**, choose to install "client" on the IMC Server, and "both" on the Remote DB Server
+  * **Distributed with Remote DB**, choose to install "client" on the Master and Subordinate server(s), and "both" on the Remote DB Server(s)
+
 ## Known Issues
 
 1) If you edited the script on Windows, you may need to change the End of Line character from Windows CR LF to Linux LF. On Linux you can run this to fix it: sed -i -e 's/\r$//' ./ILMS.sh
-2) The script does not validate command output. If a command fails to execute on your system, it will print a message about success anyways. Currently no plans to change this, as adding output validation would significantly increase the amount of code required.
+2) The script does not validate command output. If a command fails to execute on your system, the script will print a message about successfully executing it anyways. Currently no plans to change this, as adding output validation would significantly increase the amount of code required.
 3) The script validates the IP address entered, but does not verify if it is configured. This may result in an incorrect IP address to Hostname entry in /etc/hosts if you make a typo or otherwise enter the wrong IP. This will be fixed in a future release.
 4) The script checks if the MySQL root password you enter meets the MySQL default password policy requirements, but does not check for the special characters which are not supported by IMC. Please check the IMC MySQL Installation Guide for details. I would recommend using underscore _ or plus + sign in the password, which definitely work. This will be fixed in a future release.
+5) Granting remote MySQL root login permission is not working correctly in the script yet. If using the script for a Remote DB server, you should manually grant permissions to root for remote login. Please check the IMC MySQL Installation Guide for details.
 
 ## New Features & Fixes
 
@@ -52,14 +62,34 @@ It is free, open source, and comes with absolutely NO warranty.
   **Q: What do I need to do after the script finishes successfully?**
   
   A: Download and extract IMC for Linux, then navigate to the extracted folder and under /linux/install, run "chmod -x install.sh" and then "./install.sh" to start the installater. Make sure you are running a graphical environment.
+    
+  **Q: What if something goes wrong, and I have to run the script again? Will it break anything?**
+  
+  **A:** It was designed to support reruns, so you should not have any issues doing so. If you find any issues, please report them to me.
   
   **Q: What if I plan to use a different version/edition of MySQL?**
   
-  A: If you select "no" when asked whether to setup MySQL, no MySQL-related packages will be installed. Make sure you follow the respective official HPE MySQL 5.x Installation Guide for IMC.
+  **A:** If you select "no" when asked whether to setup MySQL, no MySQL-related packages will be installed. Make sure you follow the respective official HPE MySQL 5.x Installation Guide for IMC.
+
+  **Q: Why does the script need internet access?**
+  
+  **A:** To install MySQL Community repository, which is not included in the repositories of CentOS/RHEL by default (command: yum localinstall https://dev.mysql.com/get/mysql57-community-release-el7-9.noarch.rpm -y), and to retrieve the custom /etc/my.cnf file from Github for IMC (command: wget https://raw.githubusercontent.com/Justinfact/imc-ilms/master/my-ilms-$1.txt (where $1 is 5.6/5.7)).
+
+  **Q: Why no script for Oracle DB?**
+  
+  **A:** Oracle DB installation for IMC is relatively complex, and do you really need Oracle DB when you've got MySQL?
+ 
+  **Q: Why no MySQL 5.5 option?**
+  
+  **A:** Because it's outdated and no longer supported for IMC.
+  
+  **Q: Why not simply create a fully prepared, packaged Appliance that can be imported on VMware ESX/Hyper-V?**
+  
+  **A:** Several reasons. First, it would be a very large file to host and download. Second, it would not give you the flexibility to choose installation options like the tool does. Third, IMC Engineering should provide and maintain such an image, which they do not.
   
   **Q: IMC Installer shows an error related to Timezone. What should I do?**
   
-  A: This is due to a known issue with MySQL JDBC Driver for IMC. The script since v0.9 fixes this automatically for you, but here are the instructions to fix it manually. Please set the default timezone in the /etc/my.cnf by setting your server's time offset from UTC, following are some examples:
+  **A:** This is due to a known issue with MySQL JDBC Driver for IMC. The script since v0.9 fixes this automatically for you, but here are the instructions to fix it manually. Please set the default timezone in the /etc/my.cnf by setting your server's time offset from UTC, following are some examples:
   
 default-time-zone = ‘-06:00’
 
@@ -72,19 +102,3 @@ See also:
 https://stackoverflow.com/questions/930900/how-do-i-set-the-time-zone-of-mysql
 
 https://www.interserver.net/tips/kb/change-mysql-server-time-zone/
-
-  **Q: Why no script for Oracle DB?**
-  
-  A: Oracle DB installation for IMC is relatively complex, and do you really need Oracle DB when you've got MySQL?
- 
-  **Q: Why no MySQL 5.5 option?**
-  
-  A: Because it's outdated and no longer supported for IMC.
-  
-  **Q: Why not simply create a fully prepared, packaged Appliance that can be imported on VMware ESX/Hyper-V?**
-  
-  A: Several reasons. First, it would be a very large file to host and download. Second, it would not give you the flexibility to choose installation options like the tool does. Third, IMC Engineering should provide and maintain such an image, which they do not.
-  
-  **Q: What if something goes wrong, and I have to run the script again? Will it break anything?**
-  
-  A: It was designed to support reruns, so you should not have any issues doing so. If you find any issues, please report them to me.
