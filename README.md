@@ -29,7 +29,7 @@ It is free, open source, and comes with absolutely NO warranty.
 IMC provides numerous deployment models that can be used depending on the size and scale of your installation. Which model you use determines how you should answer the prompts in the script on the server(s) to prepare them for IMC.
 
 **If you are deploying IMC in...**
-  * **Centralized with Local DB**, choose to install "both" (MySQL Client & Server) on the IMC Servr
+  * **Centralized with Local DB**, choose to install "both" (MySQL Client & Server) on the IMC Server
   * **Centralized with Remote DB**, choose to install "client" on the IMC Server, and "both" on the Remote DB Server
   * **Distributed with Remote DB**, choose to install "client" on the Master and Subordinate server(s), and "both" on the Remote DB Server(s)
 
