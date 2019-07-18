@@ -3,7 +3,7 @@
 # This script automates the entire setup process to prepare the server for installation of HPE IMC on RHEL.
 # All functionality is contained in separate functions that are called by main in the required sequence.
 
-echo ">>> Begin executing ILMS.sh v0.8 (BETA) 17.07.2019 <<<"
+echo ">>> Begin executing ILMS.sh v0.9 (BETA) 19.07.2019 <<<"
 
 function welcome() {
     # Welcome messages to get started or exit, determines sequence to print based on input 1 (first run) or 2.
@@ -406,7 +406,7 @@ function my_timezone() {
 
     echo "*** System indicates the UTC Offset is ${offset}."
     echo "*** Adding $config to /etc/my.cnf to fix the known timezone issue."
-    sed "29i${config}" /etc/my.cnf
+    sed -i "29i${config}" /etc/my.cnf
 }
 
 function valid_ip() {
@@ -513,7 +513,6 @@ function main {
 main
 
 # TO DO:
-# * Testing IMC installation after 5.6 DB install scripting
 # * Testing on RHEL
 # * Future features:
 # - MySQL 8.0 setup
