@@ -1,4 +1,4 @@
-# IMC Linux MySQL Setup (ILMS) v0.8 (BETA)
+# IMC Linux MySQL Setup (ILMS) v0.9 (BETA)
 Shell script that prepares your Red Hat Enterprise Linux 7.x system for installing HPE IMC 7.3 E0703+. It can perform all necessary prerequisite setup tasks, so all you need to do is download and install IMC.
 
 ## Overview
@@ -31,12 +31,22 @@ It is free, open source, and comes with absolutely NO warranty.
 3) The script validates the IP address entered, but does not verify if it is configured. This may result in an incorrect IP address to Hostname entry in /etc/hosts if you make a typo or otherwise enter the wrong IP. This will be fixed in a future release.
 4) The script checks if the MySQL root password you enter meets the MySQL default password policy requirements, but does not check for the special characters which are not supported by IMC. Please check the IMC MySQL Installation Guide for details. I would recommend using underscore _ or plus + sign in the password, which definitely work. This will be fixed in a future release.
 
+## New Features & Fixes
+
+### v0.9 19.07.2019
+* Second Beta release
+* Added function to auto-fix known MySQL Timezone issue on IMC 7.3 E0703
+* Fixed issue with MySQL Timezone function not updating /etc/my.cnf properly
+* Fixed MySQL root user password change for IMC (as it uses mysql_native_password authentication)
+
+### v0.8 17.07.2019
+* Initial Beta release
+
 ## Upcoming Features (future version)
 
 1) MySQL Commercial (Enterprise) setup automation
 2) MySQL 8.0 installation and setup automation
-3) Prompt to input UTC offset to automatically resolve the 'timezone issue' (manual fix in FAQ below)
-4) Improved input validation for IP address and MySQL root password
+3) Improved input validation for IP address and MySQL root password
 
 ## FAQ
   **Q: What do I need to do after the script finishes successfully?**
@@ -49,7 +59,7 @@ It is free, open source, and comes with absolutely NO warranty.
   
   **Q: IMC Installer shows an error related to Timezone. What should I do?**
   
-  A: This is due to a known issue with MySQL JDBC Driver for IMC. Please set the default timezone in the /etc/my.cnf by setting your server's time offset from UTC, following are some examples:
+  A: This is due to a known issue with MySQL JDBC Driver for IMC. The script since v0.9 fixes this automatically for you, but here are the instructions to fix it manually. Please set the default timezone in the /etc/my.cnf by setting your server's time offset from UTC, following are some examples:
   
 default-time-zone = ‘-06:00’
 
