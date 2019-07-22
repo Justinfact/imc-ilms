@@ -9,9 +9,10 @@ socket		= /var/lib/mysql/mysql.sock
 [mysqld]
 port		= 3306
 socket		= /var/lib/mysql/mysql.sock
+
+server-id	= 1
 skip-external-locking
 key_buffer_size = 384M
-max_allowed_packet = 200M
 table_open_cache = 512
 sort_buffer_size = 2M
 read_buffer_size = 2M
@@ -19,17 +20,20 @@ read_rnd_buffer_size = 8M
 myisam_sort_buffer_size = 64M
 thread_cache_size = 8
 query_cache_size = 32M
+thread_concurrency = 8
+
+##### IMC-specific settings #####
 max_connections = 1000
+max_allowed_packet = 200M
 character-set-server = latin1
 default-storage-engine = INNODB
 lower_case_table_names = 1
 innodb_buffer_pool_size = 512M
 innodb_additional_mem_pool_size = 16M
-thread_concurrency = 8
-server-id	= 1
 
 [mysqldump]
 quick
+single-transaction
 max_allowed_packet = 16M
 
 [mysql]
