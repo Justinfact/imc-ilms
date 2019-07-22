@@ -117,3 +117,7 @@ binlog_gtid_simple_recovery=1
 log_timestamps=system
 transaction_write_set_extraction=MURMUR32
 show_compatibility_56=on
+
+[mysqldump]
+quick
+single-transaction
