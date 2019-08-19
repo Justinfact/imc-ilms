@@ -1,4 +1,4 @@
-# IMC Linux MySQL Setup (ILMS) v0.95 BETA 22.07.2019
+# IMC Linux MySQL Setup (ILMS) v0.99 BETA 19.08.2019
 Shell script that prepares your Red Hat Enterprise Linux 7.x system for installing HPE IMC 7.3 E0703+. It can perform all necessary prerequisite setup tasks, so all you need to do is download and install IMC.
 
 ## Overview
@@ -9,12 +9,12 @@ The script can save you a lot of time spent on a rather lengthy preparation proc
 It is free, open source, and comes with absolutely NO warranty.
 
 ## Server Prerequisites
-  * Supported RHEL or CentOS (unsupported but works) installed on your server.
+  * Supported RHEL or CentOS (unsupported but works) installed on the system.
   * Hardware properly adjusted for the size of the IMC installation.
   * For hardware scaling and recommendation see [Deployment & Hardware Configuration Schemes](https://support.hpe.com/hpsc/doc/public/display?docLocale=en_US&docId=emr_na-a00075913en_us&withFrame).
-  * Static IP address must already be configured.
-  * Run the script as root (commands are not run with sudo)
-  * The server must have internet access.
+  * Static IP address must already be configured on the system.
+  * Run the script as root (commands are not run with sudo).
+  * The server must have internet access if my-ilms-**x**.txt (where x is 5.6/5.7) does not exist in the script directory.
   * RHEL Server must have an active subscription (for yum/rpm).
   
 ## Usage
@@ -36,14 +36,21 @@ IMC provides numerous deployment models that can be used depending on the size a
 ## Known Issues
 
 1) If you edited the script on Windows, you may need to change the End of Line character from Windows CR LF to Linux LF. On Linux you can run this to fix it: sed -i -e 's/\r$//' ./ILMS.sh
-2) The script does not validate command output. If a command fails to execute on your system, the script will print a message about successfully executing it anyways. Currently no plans to change this, as adding output validation would significantly increase the amount of code required.
-3) The script validates the IP address entered, but does not verify if it is configured. This may result in an incorrect IP address to Hostname entry in /etc/hosts if you make a typo or otherwise enter the wrong IP. This will be fixed in a future release.
-4) The script checks if the MySQL root password you enter meets the MySQL default password policy requirements, but does not check for the special characters which are not supported by IMC. Please check the IMC MySQL Installation Guide for details. I can recommend using underscore _ or plus + sign in the password, which definitely work. This will be fixed in a future release.
+2) The script does not validate its command output. If a command fails to execute on your system, the script itself will print a message about successfully executing it anyways. Currently no plans to change this, as adding output validation would significantly increase the amount of code required.
+3) The script checks if the MySQL root password you enter meets the MySQL default password policy requirements, but does not check for the special characters which are not supported by IMC. Please check the IMC MySQL Installation Guide for details. I can recommend using underscore _ or plus + sign in the password, which definitely work. This will be fixed in a future release.
 
 ## New Features & Fixes
 
+### v0.99 19.08.2019
+* Final beta release
+* Script will now exit if it detects no IP address was configured yet on the system
+* Improved my_config function to check if a local my-ilms-5.x.txt exists, and use that instead of downloading from github
+* Fixed MySQL service start running when installing the client only, and moved start & enable mysqld from db_install to main
+* Optimized package install functions into a single package_installer function
+* Minor bugfixes
+
 ### v0.95 22.07.2019
-* Third and pre-final release
+* Third and pre-final beta release
 * Fully tested & working on CentOS 7-1810 with MySQL 5.6/5.7
 * Updated my.cnf files for 5.6 and 5.7
 * Added function to prompt and create remote MySQL root user if requested
@@ -62,30 +69,29 @@ IMC provides numerous deployment models that can be used depending on the size a
 
 ## Upcoming Features (future version)
 
-1) MySQL Commercial (Enterprise) setup automation
-2) MySQL 8.0 installation and setup automation
-3) Improved input validation for IP address and MySQL root password
+1) MySQL 8.0 installation and setup automation (once IMC supports it)
+2) Improved input validation for IP address and MySQL root password
 
 ## FAQ
   **Q: What do I need to do after the script finishes successfully?**
   
-  A: Download and extract IMC for Linux, then navigate to the extracted folder and under /linux/install, run "chmod -x install.sh" and then "./install.sh" to start the installater. Make sure you are running a graphical environment.
+  A: Download and extract IMC for Linux, then navigate to the extracted folder and under /linux/install, run "chmod -x install.sh" and then "./install.sh" to start the installer. Make sure you are running a graphical environment.
     
   **Q: What if something goes wrong, and I have to run the script again? Will it break anything?**
   
-  **A:** It was designed to support reruns, so you should not have any issues doing so. If you find any issues, please report them to me.
+  **A:** It was designed to support reruns, so you should not have any issues doing so - but try not to forcefully exit the script in the middle of running 'yum' or otherwise. If you find any issues, please report them to me.
   
   **Q: What if I plan to use a different version/edition of MySQL?**
   
   **A:** If you select "no" when asked whether to setup MySQL, no MySQL-related packages will be installed. Make sure you follow the respective official HPE MySQL 5.x Installation Guide for IMC.
 
-  **Q: Why does the script need internet access?**
+  **Q: Does the script need internet access?**
   
-  **A:** To install MySQL Community repository, which is not included in the repositories of CentOS/RHEL by default (command: yum localinstall https://dev.mysql.com/get/mysql57-community-release-el7-9.noarch.rpm -y), and to retrieve the custom /etc/my.cnf file from Github for IMC (command: wget -O /etc/my.cnf https://raw.githubusercontent.com/Justinfact/imc-ilms/master/my-ilms-$1.txt (where $1 is 5.6/5.7)).
+  **A:** Yum needs internet access, directly or via proxy, to install various package groups and MySQL repository, which is not included in the default repositories of CentOS/RHEL.
 
-  **Q: Do you have an 'offline' version of the script (that only requires yum)?**
+  **Q: Do you have an 'offline' version of the script (that does not use wget)?**
   
-  **A:** Sorry, not at the moment. I might release a separate offline script in the future if it is requested.
+  **A:** The script can be run 'offline' automatically since v0.99 - it will check if the my-ilms-$1.txt (where $1 is 5.6/5.7) exists in the home directory, and download  from github with wget only if it cannot be found. 
 
   **Q: Can I run the script silently (without prompting)?**
   
@@ -105,7 +111,7 @@ IMC provides numerous deployment models that can be used depending on the size a
   
   **Q: IMC Installer shows an error related to Timezone. What should I do?**
   
-  **A:** This is due to a known issue with MySQL JDBC Driver for IMC. The script since v0.9 fixes this automatically for you, but here are the instructions to fix it manually. Please set the default timezone in the /etc/my.cnf by setting your server's time offset from UTC, following are some examples:
+  **A:** This is due to a known issue with MySQL JDBC Driver for IMC. The script since v0.9x fixes this automatically for you, but in case you need it, here are the instructions to fix it manually. Please set the default timezone in the /etc/my.cnf by setting your server's time offset from UTC, following are some examples:
   
 default-time-zone = ‘-06:00’
 
