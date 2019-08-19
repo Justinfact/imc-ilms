@@ -3,7 +3,7 @@
 # This script automates the entire setup process to prepare the server for installation of HPE IMC on RHEL.
 # All functionality is contained in separate functions that are called by main in the required sequence.
 
-echo ">>> Begin executing ILMS.sh v0.95 (BETA) 22.07.2019 <<<"
+echo ">>> Begin executing ILMS.sh v0.99 (BETA) 19.08.2019 <<<"
 
 function welcome() {
     # Welcome messages, prompt to get started or exit
@@ -14,9 +14,10 @@ function welcome() {
 *** While it has been tested and should work, it comes with absolutely NO warranty.
 *** For feedback and feature requests, please contact 'jguse' on the HPE Forums.
 !!! *** REQUIREMENTS *** !!!
-* This server must have internet access (to download from github).
 * Static IP address must already be configured.
-* RHEL must have an active subscription (for yum)!
+* RHEL must have an active subscription (for yum).
+* YUM must be able to access the internet (directly or proxy).
+* 
 * This script accomplishes all setup tasks to prepare the server for IMC...
 * ...except for downloading and installing IMC.
 !!! Please confirm you have understood the above, and the server meets the prerequisites."
@@ -127,8 +128,48 @@ function db_choices() {
     fi
 }
 
+function db_cleanup() {
+    # Remove any MySQL and leftovers from previous MySQL installations if necessary.
+
+    echo "*** Checking if mysqld service is running."
+    service=$( systemctl is-active --quiet mysqld )
+    if [ $service ]; then
+        echo "*** mysqld service running, stopping it now."
+        systemctl stop mysqld
+    else
+        echo "*** mysqld service is not running."
+    fi
+
+    FILE="/usr/lib/systemd/system/mysqld.service"
+    if [ -f $FILE ]; then
+        echo "*** Removing existing MySQL installation."
+        yum remove mysql mysql-server -y
+    else
+        echo "*** MySQL is not installed."
+    fi
+
+    local time=$( date "+%Y.%m.%d-%H.%M.%S" )
+    DIR="/var/lib/mysql/"
+    if [ -d "$DIR" ]; then
+        echo "*** Existing MySQL in /var/lib/mysql found, moving it to random /var/lib/mysql-backup-#"
+        mv -f /var/lib/mysql/ /var/lib/mysql-backup-$time
+    else
+        echo "*** No leftovers from MySQL found."
+    fi
+
+    FILE="/var/log/mysqld.log"
+    if [ -f "$FILE" ]; then
+        echo "*** Existing MySQL Log found at /var/log/mysqld.log, moving it to random /var/log/mysqld-backup-#"
+        mv -f /var/log/mysqld.log /var/lib/mysqld-backup-${time}.log
+    else
+        echo "*** No MySQL Log found."
+    fi
+
+    echo "*** Finished cleaning up existing MySQL installation."
+}
+
 function db_install() {
-    # Add MySQL repository, download & install MySQL 5.6/5.7 Community Client and/or Server, start and enable mysqld.
+    # Add MySQL repository, download & install MySQL 5.6/5.7 Community Client and/or Server.
 
     yum localinstall https://dev.mysql.com/get/mysql57-community-release-el7-9.noarch.rpm -y
     echo "*** MySQL Community Repository installed."
@@ -150,10 +191,6 @@ function db_install() {
 
     echo "*** Running yum update, please wait..."
     yum update -y
-
-    systemctl start mysqld
-    systemctl enable mysqld
-    echo "*** mysqld service started and enabled."
 }
 
 function disable_security() {
@@ -165,57 +202,6 @@ function disable_security() {
     systemctl stop firewalld.service
     systemctl disable firewalld.service
     echo "*** Firewall stopped and disabled."
-}
-
-function desktop_install() {
-    # Prompt to install the desktop environment for IMC and install GNOME/KDE if chosen and set graphical startup
-
-    echo "*** To run the HPE Deployment Monitoring Agent and install IMC, you should use a desktop environment."
-    read -p ">>> Install GNOME, KDE or none? (GNOME/KDE/none) " prompt
-    until [ "$prompt" == "GNOME" ] || [ "$prompt" == "KDE" ] || [ "$prompt" == "none" ]; do
-        echo "!!! Invalid input! Enter 'GNOME', 'KDE' or 'none'."
-        read -p ">>> Install GNOME, KDE or none? (GNOME/KDE/none) " prompt
-    done
-
-    if [ "$prompt" == "GNOME" ]; then
-        echo "*** Installing GNOME Desktop, please wait..."
-        yum groupinstall "GNOME Desktop" -y
-
-        echo "*** Setting systemctl set-default graphical.target"
-        systemctl set-default graphical.target
-
-    elif [ "$prompt" == "KDE" ]; then
-        echo "*** Installing KDE Plasma Workspaces, please wait..."
-        yum groupinstall "KDE Plasma Workspaces" -y
-
-        echo "*** Setting systemctl set-default graphical.target"
-        systemctl set-default graphical.target
-    else
-        echo "*** Desktop environment will NOT be installed."
-    fi
-}
-
-function group_install() {
-    # Download & install required package groups for IMC, if not already installed
-
-    local update=1
-    for group in "Server with GUI" "Development Tools" "Compatibility Libraries"; do
-        installed=$( yum grouplist installed | grep "$group" )
-        if [ -z "$installed" ]; then
-            echo "*** Installing $group, please wait..."
-            yum groupinstall "$group" -y
-            update=0
-        else
-            echo "*** $group already installed."
-        fi
-    done
-
-    if [ $update -eq 0 ]; then
-        echo "*** Required groups for IMC installed. Running yum update, please wait..."
-        yum update -y
-    else
-        echo "*** Required groups are already installed."
-    fi
 }
 
 function hosts_config() {
@@ -267,23 +253,22 @@ function ip_prompt() {
     fi
 }
 
-function library_install() {
-    # These 32-bit libraries are required to install IMC. Removed 'unzip perl telnet ftp' as they are optional.
-
-    yum install glibc.i686 libgcc.i686 libaio.i686 libstdc++.i686 nss-softokn-freebl.i686 -y
-    echo "*** 32-bit libraries required by IMC installed."
-}
-
 function my_config() {
     # Gets the MySQL version backs up and replaces /etc/my.cnf with the correct file for the MySQL Server
 
     echo "*** Creating backup of /etc/my.cnf as /etc/my.cnf.bak"
     mv -f /etc/my.cnf /etc/my.cnf.bak
 
-    echo "*** Downloading custom $1 my.cnf file for IMC from github..."
-    wget -O /etc/my.cnf "https://raw.githubusercontent.com/Justinfact/imc-ilms/master/my-ilms-$1.txt"
+    FILE=./my-ilms-$1.txt
+    if [ -f "$FILE" ]; then
+        echo "*** Copying local my-ilms-$1 to /etc/my.cnf"
+        \cp ./my-ilms-$1.txt /etc/my.cnf
+    else
+        echo "*** Downloading custom $1 my.cnf file for IMC from github..."
+        wget -O /etc/my.cnf "https://raw.githubusercontent.com/Justinfact/imc-ilms/master/my-ilms-$1.txt"
+    fi
 
-    echo "*** Downloaded and installed custom /etc/my.cnf file for IMC:"
+    echo "*** Installed custom /etc/my.cnf file for IMC:"
     cat /etc/my.cnf
 }
 
@@ -292,7 +277,7 @@ function my_limits() {
 
     limit=$( grep LimitNO /usr/lib/systemd/system/mysqld.service )
     if [ -z "$limit" ]; then
-        echo -e "LimitNOFILE=infinity" >> /usr/lib/systemd/system/mysqld.service
+        echo "LimitNOFILE=infinity" >> /usr/lib/systemd/system/mysqld.service
         echo "*** Updated mysqld.service open file limit to infinity."
     else
         sed -i 's/^LimitNOFILE.*/LimitNOFILE=infinity/g' /usr/lib/systemd/system/mysqld.service
@@ -301,7 +286,7 @@ function my_limits() {
 
     limit=$( grep LimitMEM /usr/lib/systemd/system/mysqld.service )
     if [ -z "$limit" ]; then
-        echo -e "LimitMEMLOCK=infinity" >> /usr/lib/systemd/system/mysqld.service
+        echo "LimitMEMLOCK=infinity" >> /usr/lib/systemd/system/mysqld.service
         echo "*** Updated mysqld.service memory limit to infinity."
     else
         sed -i 's/^LimitMEM.*/LimitMEMLOCK=infinity/g' /usr/lib/systemd/system/mysqld.service
@@ -387,9 +372,7 @@ function my_secure_install() {
     fi
 
     if [ "$myconf" == 5.6 ]; then
-        mysql -u root -Be "UPDATE mysql.user SET Password=PASSWORD('${rootpw}'), password_expired='N' WHERE User='root' and plugin = 'mysql_old_password';\
-        UPDATE mysql.user SET Password=PASSWORD('${rootpw}'), password_expired='N' WHERE User='root' and plugin in ('', 'mysql_native_password');\
-        UPDATE mysql.user SET authentication_string=PASSWORD('${rootpw}'), password_expired='N' WHERE User='root' and plugin = 'sha256_password';FLUSH PRIVILEGES;"
+        mysqladmin password "${rootpw}"
         echo "*** Configured MySQL root user with the password you entered."
 
         echo -e "[client]\nuser = root\npassword = ${rootpw}" >> ~/.my.cnf
@@ -423,6 +406,50 @@ function my_timezone() {
     echo "*** System indicates the UTC Offset is ${offset}.
 *** Adding $config to /etc/my.cnf to fix the known timezone issue."
     sed -i "/^default-storage-engine.*/a ${config}" /etc/my.cnf
+}
+
+function package_installer() {
+    # Download & install required package groups and libraries for IMC
+
+    for group in "Server with GUI" "Development Tools" "Compatibility Libraries"; do
+        installed=$( yum grouplist installed | grep "$group" )
+        if [ -z "$installed" ]; then
+            echo "*** Installing $group, please wait..."
+            yum groupinstall "$group" -y
+        else
+            echo "*** $group already installed."
+        fi
+    done
+
+    yum install glibc.i686 libgcc.i686 libaio.i686 libstdc++.i686 nss-softokn-freebl.i686 -y
+    echo "*** 32-bit libraries required by IMC installed."
+
+    echo "*** To run the HPE Deployment Monitoring Agent and install IMC, you should use a desktop environment."
+    read -p ">>> Install GNOME, KDE or none? (GNOME/KDE/none) " prompt
+    until [ "$prompt" == "GNOME" ] || [ "$prompt" == "KDE" ] || [ "$prompt" == "none" ]; do
+        echo "!!! Invalid input! Enter 'GNOME', 'KDE' or 'none'."
+        read -p ">>> Install GNOME, KDE or none? (GNOME/KDE/none) " prompt
+    done
+
+    if [ "$prompt" == "GNOME" ]; then
+        echo "*** Installing GNOME Desktop, please wait..."
+        yum groupinstall "GNOME Desktop" -y
+
+        echo "*** Setting systemctl set-default graphical.target"
+        systemctl set-default graphical.target
+
+    elif [ "$prompt" == "KDE" ]; then
+        echo "*** Installing KDE Plasma Workspaces, please wait..."
+        yum groupinstall "KDE Plasma Workspaces" -y
+
+        echo "*** Setting systemctl set-default graphical.target"
+        systemctl set-default graphical.target
+    else
+        echo "*** Desktop environment will NOT be installed."
+    fi
+
+    echo "*** Updated all packages..."
+    yum update -y
 }
 
 function valid_ip() {
@@ -512,15 +539,17 @@ function main {
     hosts_config $ipaddr
 
     db_choices
-    group_install
-    library_install
+    package_installer
     disable_security
 
     if [ "$dbconfig" != "none" ]; then
-        db_install $dbconfig $myconfig
-        systemctl start mysqld
         if [ "$dbconfig" == "both" ]; then
+            db_cleanup
+            db_install $dbconfig $myconfig
             echo "*** Beginning MySQL $myconfig Server setup..."
+            systemctl start mysqld
+            systemctl enable mysqld
+            echo "*** mysqld service started and enabled."
             my_rootpass $dbconfig
             my_secure_install $myconfig
             my_remote_login $myconfig
@@ -528,17 +557,14 @@ function main {
             my_timezone
             my_limits
             systemctl restart mysqld
+            echo "*** mysqld service restarted."
+        else
+            db_install $dbconfig $myconfig
         fi
         echo "*** MySQL $myconfig installed & configured."
     fi
 
-    desktop_install
     goodbye
 }
 
 main
-
-# * Future features:
-# - MySQL 8.0 setup
-# - MySQL Commercial repo install and Enterprise install option
-# - Auto-configure Firewalld for IMC
