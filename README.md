@@ -102,9 +102,17 @@ IMC provides numerous deployment models that can be used depending on the size a
   
   **A:** Oracle DB installation for IMC is relatively complex, and do you really need Oracle DB when you've got MySQL?
  
+   **Q: Why no MySQL 8.0 option?**
+  
+  **A:** It's not supported yet for IMC, the installation scripts prevent using it.
+ 
   **Q: Why no MySQL 5.5 option?**
   
   **A:** It's outdated and no longer supported for IMC.
+  
+  **Q: What about MySQL Commercial (Standard/Enterprise)?**
+  
+  **A:** The paid variants of MySQL must be purchased, downloaded and installed manually, the script cannot do this for you.
   
   **Q: Why not simply create a fully prepared, packaged Appliance that can be imported on VMware ESX/Hyper-V?**
   
