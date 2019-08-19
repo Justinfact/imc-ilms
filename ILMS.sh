@@ -17,7 +17,6 @@ function welcome() {
 * Static IP address must already be configured.
 * RHEL must have an active subscription (for yum).
 * YUM must be able to access the internet (directly or proxy).
-* 
 * This script accomplishes all setup tasks to prepare the server for IMC...
 * ...except for downloading and installing IMC.
 !!! Please confirm you have understood the above, and the server meets the prerequisites."
