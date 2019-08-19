@@ -47,6 +47,7 @@ IMC provides numerous deployment models that can be used depending on the size a
 * Improved my_config function to check if a local my-ilms-5.x.txt exists, and use that instead of downloading from github
 * Fixed MySQL service start running when installing the client only, and moved start & enable mysqld from db_install to main
 * Optimized package install functions into a single package_installer function
+* Added db_cleanup function to check for old MySQL leftovers and remove them
 * Minor bugfixes
 
 ### v0.95 22.07.2019
