@@ -1,8 +1,8 @@
-# IMC Linux MySQL Setup (ILMS) v0.99 BETA 19.08.2019
-Shell script that prepares your Red Hat Enterprise Linux 7.x system for installing HPE IMC 7.3 E0703+. It can perform all necessary prerequisite setup tasks, so all you need to do is download and install IMC.
+# IMC Linux MySQL Setup (ILMS) v1.00 12.08.2020
+Shell script that prepares your Red Hat Enterprise Linux 7.x system for installing HPE IMC 7.3 E0703+. It can perform all necessary prerequisite setup tasks, so all you need to do afterwards is download and install IMC.
 
 ## Overview
-The purpose of this script is to provide an easy way to prepare a RHEL server for IMC installation. It should be executed on the server, will prompt you for some input, and perform all necessary setup tasks for either type of IMC deployment (Centralized/Distributed). It can install and setup MySQL 5.6/5.7 Community for you as well.
+The purpose of this script is to provide an easy way to prepare a RHEL server for IMC installation. It should be executed on the server, will prompt you for some input, and perform all necessary setup tasks for either type of IMC deployment (Centralized/Distributed). It can install and setup MySQL 5.7/8.0 Community for you as well.
 
 The script can save you a lot of time spent on a rather lengthy preparation process, and intends to be user-friendly, re-runable, verbose and relatively foolproof. It should be usable even for those inexperienced or unfamiliar with the setup process.
 
@@ -14,7 +14,7 @@ It is free, open source, and comes with absolutely NO warranty.
   * For hardware scaling and recommendation see [Deployment & Hardware Configuration Schemes](https://support.hpe.com/hpsc/doc/public/display?docLocale=en_US&docId=emr_na-a00075913en_us&withFrame).
   * Static IP address must already be configured on the system.
   * Run the script as root (commands are not run with sudo).
-  * The server must have internet access if my-ilms-**x**.txt (where x is 5.6/5.7) does not exist in the script directory.
+  * The server must have internet access if my-ilms-**x**.txt (where x is 5.7/8.0) does not exist in the script directory.
   * RHEL Server must have an active subscription (for yum/rpm).
   
 ## Usage
@@ -36,10 +36,19 @@ IMC provides numerous deployment models that can be used depending on the size a
 ## Known Issues
 
 1) If you edited the script on Windows, you may need to change the End of Line character from Windows CR LF to Linux LF. On Linux you can run this to fix it: sed -i -e 's/\r$//' ./ILMS.sh
-2) The script does not validate its command output. If a command fails to execute on your system, the script itself will print a message about successfully executing it anyways. Currently no plans to change this, as adding output validation would significantly increase the amount of code required.
-3) The script checks if the MySQL root password you enter meets the MySQL default password policy requirements, but does not check for the special characters which are not supported by IMC. Please check the IMC MySQL Installation Guide for details. I can recommend using underscore _ or plus + sign in the password, which definitely work. This will be fixed in a future release.
+2) The script does not validate its command output. If a command fails to execute on your system, the script may print a message about successfully executing it anyways. Currently no plans to change this, as adding output validation would significantly increase the amount of code and complexity required.
 
 ## New Features & Fixes
+
+### v1.00 12.08.2020
+* Database choices updated to MySQL 5.7 or 8.0
+* Added check to ensure script is run as root
+* Added check to ensure password does not contain chars unsupported by IMC
+* Easily visible X error indicator added
+* Timestamp added to backup of old /var/lib/mysql
+* Slowed the script execution down slightly for readability
+* Merged user input into a single function and optimized it
+* Various other minor code optimizations
 
 ### v0.99 19.08.2019
 * Final beta release
@@ -70,8 +79,7 @@ IMC provides numerous deployment models that can be used depending on the size a
 
 ## Upcoming Features (future version)
 
-1) MySQL 8.0 installation and setup automation (once IMC supports it)
-2) Improved input validation for IP address and MySQL root password
+1) Silent version of the script
 
 ## FAQ
   **Q: What do I need to do after the script finishes successfully?**
@@ -92,7 +100,7 @@ IMC provides numerous deployment models that can be used depending on the size a
 
   **Q: Do you have an 'offline' version of the script (that does not use wget)?**
   
-  **A:** The script can be run 'offline' automatically since v0.99 - it will check if the my-ilms-$1.txt (where $1 is 5.6/5.7) exists in the home directory, and download  from github with wget only if it cannot be found. 
+  **A:** The script can be run 'offline' automatically since v0.99 - it will check if the file my-ilms-$1.txt (where $1 is 5.7/8.0) exists in the current directory, and download from github with wget only if it cannot be found. 
 
   **Q: Can I run the script silently (without prompting)?**
   
