@@ -110,9 +110,9 @@ IMC provides numerous deployment models that can be used depending on the size a
   
   **A:** Oracle DB installation for IMC is relatively complex, and do you really need Oracle DB when you've got MySQL?
  
-   **Q: Why no MySQL 8.0 option?**
+   **Q: Why no MySQL 5.6 option?**
   
-  **A:** It's not supported yet for IMC, the installation scripts prevent using it.
+  **A:** It was removed to encourage using newer 5.7/8.0 versions. I might add it back in the future...
  
   **Q: Why no MySQL 5.5 option?**
   
